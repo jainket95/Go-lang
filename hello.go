@@ -41,73 +41,70 @@ func check(e error) {
 func main() {
 	fmt.Println("Starting the app")
 
-	jsonFile, err := os.Open("users.json")
+	//Opening the json file
+	jsonFile, err := os.Open("backup.json")
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Successfully Opened json")
+	fmt.Println("Successfully Opened back json")
 
 	defer jsonFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
-	var aplha AbsolutePaths
+	var path AbsolutePaths
 
-	json.Unmarshal(byteValue, &aplha)
+	json.Unmarshal(byteValue, &path)
 
 	var oldBackup = filepath.Dir("backup\\")
 
+	//Removing the previously created backup directory in any
 	os.RemoveAll(oldBackup)
 
+	//creating new backup directory
 	err = os.Mkdir("backup", 0755)
 	check(err)
 
 	var backup = filepath.Dir("backup\\")
 
-	for i := 0; i < len(aplha.AbsolutePaths); i++ {
-		fmt.Println("....Creatting Backup for" + aplha.AbsolutePaths[i].Path + "files")
-		Dir(aplha.AbsolutePaths[i].Path, backup)
+	//access the absolutepath array with a for loop
+	for i := 0; i < len(path.AbsolutePaths); i++ {
+		fmt.Println("....Creatting Backup for.....  " + path.AbsolutePaths[i].Path + " ....files")
+		//passing the directories from json in the json file and creating a copy into the backup directory
+		Dir(path.AbsolutePaths[i].Path, backup)
 	}
 
+	//reading sql server credentials from the newUser.json file
 	userFile, err := os.Open("newUser.json")
-	fmt.Println(userFile)
+
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Successfully Opened json")
+	fmt.Println("Successfully Opened newUser json")
 
 	defer userFile.Close()
 
-	userbyteValue, _ := ioutil.ReadAll(userFile)
+	userbyteValue, err := ioutil.ReadAll(userFile)
 
-	fmt.Println(userbyteValue)
-
+	// creating an object user type Userdetail as data structure
 	var user Userdetail
 
-	// var user map[string]interface{}
-	// json.Unmarshal([]byte(userbyteValue), &user)
+	err = json.Unmarshal(userbyteValue, &user)
+	check(err)
 
-	json.Unmarshal(userbyteValue, &user)
-	fmt.Println(user)
+	username := user.Username
+	password := user.Password
+	hostname := user.Hostname
+	port := user.Port
+	dbname := user.Dbname
 
-	// fmt.Println("user.Username" + )
-	// fmt.Println("user.Password" + user.Password)
-	// fmt.Println("user.Hostname" + user.Hostname)
-	// fmt.Println("user.Port" + user.Port)
-	// fmt.Println("user.Dbname" + user.Dbname)
-
-	username := "root"
-	password := "mysqlpassword"
-	hostname := "localhost"
-	port := "3306"
-	dbname := "backupfiles"
-
-	dumpDir := "backup"                                             // you should create this directory
+	dumpDir := "backup"                                             //created this directory
 	dumpFilenameFormat := fmt.Sprintf("%s-20060102T150405", dbname) // accepts time layout string and add .sql at the end of file
 
+	//opening the mysql connection and passing the user credentials
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, hostname, port, dbname))
 	if err != nil {
 		fmt.Println("Error opening database: ", err)
@@ -132,9 +129,10 @@ func main() {
 	// Close dumper and connected database
 	dumper.Close()
 
-	//Zipping the file here
+	// Zipping the file here
 	var files []string
 
+	//providing the root directory for zipping and compression
 	root := "backup"
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		files = append(files, path)
@@ -143,9 +141,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// for _, file := range files {
-	// 	fmt.Println(file)
-	// }
+
+	for _, file := range files {
+		fmt.Println(file)
+	}
 
 	output := "zip\\backup.zip"
 
@@ -156,6 +155,7 @@ func main() {
 
 }
 
+//function for that run recursively and addes files and subdirectories
 func Dir(src string, dst string) error {
 	var err error
 	var fds []os.FileInfo
@@ -189,6 +189,7 @@ func Dir(src string, dst string) error {
 	return nil
 }
 
+//function used by the Dir function for copy and replicating the files into another file
 func File(src, dst string) error {
 	var err error
 	var srcfd *os.File
@@ -214,6 +215,7 @@ func File(src, dst string) error {
 	return os.Chmod(dst, srcinfo.Mode())
 }
 
+//it is a zipit function used in zipping functionality to compress the data into a zip file
 func zipit(source, target string) error {
 	zipfile, err := os.Create(target)
 	if err != nil {
