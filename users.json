@@ -1,10 +1,10 @@
 {
   "absolutePaths":[
   {
-    "path":"main folder\\documents\\description.txt"
+    "path":"mainfolder\\documents"
   },
   {
-    "path":"main folder\\documents\\hello.txt"
+    "path":"mainfolder\\pictures"
   }
 ]
 }

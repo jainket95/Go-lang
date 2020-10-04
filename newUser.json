@@ -1,0 +1,10 @@
+{
+  "userData":{
+    "username":"root",
+    "password":"mysqlpassword",
+    "hostname":"localhost",
+    "port":"3306",
+    "dbname":"backupfiles"
+  }
+}
+  
